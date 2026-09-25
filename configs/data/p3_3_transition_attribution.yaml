@@ -1,0 +1,56 @@
+task_id: P3.3
+seed: 42
+
+input:
+  transition_labels: data/interim/P3_1/transition_label.parquet
+  p3_1_manifest: data/manifests/P3_1/transition_manifest.json
+  p3_1_report: reports/P3_1/report.json
+  phase_entries: data/interim/P3_2/phase_entry_unified.parquet
+  phase_decompositions: data/interim/P3_2/phase_decomposition.parquet
+  p3_2_manifest: data/manifests/P3_2/phase_diagram_manifest.json
+  p3_2_report: reports/P3_2/report.json
+  compatibility_exclusion_ledger: reports/P3_2/compatibility_exclusion_ledger.csv
+
+output:
+  root: data/interim/P3_3
+  attribution: data/interim/P3_3/transition_attribution.parquet
+  counterfactual_values: data/interim/P3_3/counterfactual_value.parquet
+  manifest: data/manifests/P3_3/attribution_manifest.json
+  ineligible_transition_ledger: reports/P3_3/ineligible_transition_ledger.csv
+  reconstruction_audit_csv: reports/P3_3/shapley_reconstruction_audit.csv
+  reconstruction_audit_json: reports/P3_3/shapley_reconstruction_audit.json
+  data_dictionary: reports/P3_3/data_dictionary.csv
+
+population:
+  observation_status: observed
+  identity_confidences: [A1, A2]
+  important_transition: rebuilt_unified_hull_stability_flip
+  require_same_thermo_type: true
+  require_same_phase_context_chemsys: true
+  excluded_endpoint_policy: ledger_and_exclude
+
+counterfactual:
+  method: exact_full_enumeration_shapley
+  method_version: EXACT_CONTEXT_SHAPLEY_V1
+  players:
+    - competitor_inventory
+    - uncorrected_energy
+    - compatibility_correction
+    - candidate_identity
+  phase_matching_key: casefold_entry_id_plus_fractional_composition
+  infeasible_competitor_decomposition_value_eV_per_atom: 0.0
+  absolute_tolerance_eV_per_atom: 1.0e-6
+
+gate:
+  minimum_important_high_confidence_flips: 1500
+  minimum_attribution_fraction: 0.60
+
+audit:
+  sample_per_snapshot_pair_thermo_type: 50
+
+execution:
+  workers: 48
+
+parquet:
+  compression: zstd
+  row_group_size: 50000

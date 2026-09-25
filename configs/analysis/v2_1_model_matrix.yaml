@@ -1,0 +1,98 @@
+task_id: V2.1
+status: FROZEN_CONFIGURATION_ONLY
+training_authorized: false
+seed_schedule: [42, 43, 44, 45, 46]
+
+population:
+  roles: [train, validation]
+  split_unit: canonical_lineage_id
+  bootstrap_unit: canonical_lineage_id
+  train_interval: "2022-10-28->2023-11-01"
+  validation_interval: "2023-11-01->2024-12-18"
+  locked_roles_prohibited: [locked_test]
+
+shared_budget:
+  algorithm_class: sklearn.ensemble.HistGradientBoostingClassifier
+  effective_total_boosting_iterations: 250
+  hyperparameter_trials: 1
+  early_stopping: false
+  learning_rate: 0.05
+  max_leaf_nodes: 15
+  min_samples_leaf: 50
+  l2_regularization: 1.0
+  max_bins: 255
+  class_weight: balanced
+  missingness_policy: explicit_indicator_then_zero_fill
+  calibration_method: sigmoid_lineage_group_crossfit_on_training_only
+  calibration_folds: 5
+  selection_role: validation
+  no_test_time_recalibration: true
+  target_prevalence_access: prohibited
+
+models:
+  M0:
+    mechanism: current_hull_only
+    feature_set: M0
+    algorithm_class: sklearn.ensemble.HistGradientBoostingClassifier
+    effective_total_boosting_iterations: 250
+  M1:
+    mechanism: composition_complexity_workflow_provenance
+    feature_set: M1
+    algorithm_class: sklearn.ensemble.HistGradientBoostingClassifier
+    effective_total_boosting_iterations: 250
+  M2:
+    mechanism: static_candidate_specific_phase_geometry
+    feature_set: M2
+    algorithm_class: sklearn.ensemble.HistGradientBoostingClassifier
+    effective_total_boosting_iterations: 250
+  M3:
+    mechanism: source_only_temporal_database_growth
+    feature_set: M3
+    algorithm_class: sklearn.ensemble.HistGradientBoostingClassifier
+    effective_total_boosting_iterations: 250
+  M4:
+    mechanism: static_relational_geometry_plus_temporal_growth
+    feature_set: M4
+    algorithm_class: sklearn.ensemble.HistGradientBoostingClassifier
+    effective_total_boosting_iterations: 250
+  M5:
+    mechanism: competitor_arrival_hazard_times_candidate_displacement_vulnerability
+    feature_set: M5
+    algorithm_class: sklearn.ensemble.HistGradientBoostingClassifier
+    factor_models:
+      competitor_arrival:
+        feature_set: M5_arrival
+        target: hull_relevant_competitor_arrival_event
+        effective_total_boosting_iterations: 125
+      displacement_vulnerability:
+        feature_set: M5_displacement
+        target: candidate_displacement_event
+        eligibility: conditional_displacement_eligible
+        effective_total_boosting_iterations: 125
+    effective_total_boosting_iterations: 250
+    combination: calibrated_probability_product
+
+primary_increments:
+  static_relation_increment: M2-M1
+  temporal_growth_increment: M3-M1
+  dynamic_relation_increment: M4-M3
+  mechanism_factorization_increment: M5-M4
+
+primary_targets:
+  - stable_to_unstable_event
+  - competitor_inventory_revision_event
+  - candidate_displacement_event
+
+secondary_targets:
+  enabled:
+    - unstable_to_stable_event
+    - delta_reported_energy_above_hull
+    - dominant_accounting_channel
+  deferred_until_exact_formal_decomposition_table_available:
+    - decomposition_set_change_probability_for_all_at_risk_rows
+  prohibited_as_sole_primary_target:
+    - any_direction_flip_event
+
+deep_model_entry_gate:
+  allowed_only_after: M4-M3 development gain passes preregistered gate
+  status: PROHIBITED_IN_V2_1

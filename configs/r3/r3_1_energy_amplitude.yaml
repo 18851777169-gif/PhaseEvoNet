@@ -1,0 +1,118 @@
+task_id: R3.1
+seed: 42
+method_version: PHASEEVONET_R3_1_ENERGY_AMPLITUDE_V1
+
+snapshots: ["2022-10-28", "2023-11-01", "2024-12-18", "2025-09-25"]
+
+input:
+  r3_0_report: reports/R3_0/report.json
+  transition_labels: data/interim/P3_1/transition_label.parquet
+  phase_entries: data/interim/P3_2/phase_entry_unified.parquet
+  phase_decompositions: data/interim/R3_0_inputs/phase_decomposition.parquet
+  phase_decompositions_canonical: data/interim/P3_2/phase_decomposition.parquet
+  transition_attribution: data/interim/P3_3/transition_attribution.parquet
+  counterfactual_values: data/interim/P3_3/counterfactual_value.parquet
+  p3_1_manifest: data/manifests/P3_1/transition_manifest.json
+  p3_2_manifest: data/manifests/P3_2/phase_diagram_manifest.json
+  p3_3_manifest: data/manifests/P3_3/attribution_manifest.json
+
+expected_sha256:
+  transition_labels: ad896e7f150a14c5d724402fee61127c8d5d997c62b52ab207b2bdf6f3319e25
+  phase_entries: 9236b0fdaeafe14b453afba818d26e4ca6d435812486b0924cb85b5fb26e1f7b
+  phase_decompositions: 95b0f6abcdc0289957021d48d12f433ba3764a9d9d9fb99009364e1fd1301386
+  transition_attribution: 2f4eaa954ba607633824ce0184c216679fe32679b1928ab768f2cd0b3b839603
+  counterfactual_values: f5005d9810e268e2e6ede32adf63de08bb45db95a2316d87160cdb5a68d89ac0
+
+population:
+  observation_status: observed
+  primary_identity_confidences: [A1]
+  sensitivity_identity_confidences: [A1, A2]
+  require_same_thermo_type: true
+  require_same_phase_context_chemsys_for_mechanism: true
+  primary_strict_candidate_identity_unchanged: true
+  preserve_unified_only_cohort: true
+
+energy:
+  stored_unit: eV_per_atom
+  display_unit: meV_per_atom
+  numerical_stability_tolerance_eV_per_atom: 1.0e-8
+  phase_reconstruction_tolerance_eV_per_atom: 1.0e-6
+  endpoint_reconciliation_tolerance_eV_per_atom: 1.0e-12
+  thresholds_eV_per_atom: [0.001, 0.005, 0.010, 0.025, 0.050]
+  primary_threshold_eV_per_atom: 0.010
+  stringent_threshold_eV_per_atom: 0.025
+  exact_flip_amplitude_definition:
+    stable_to_unstable: target_energy_above_hull_gte_threshold
+    unstable_to_stable: source_energy_above_hull_gte_threshold
+  threshold_label_definition: energy_above_hull_lte_threshold
+
+signed_margin:
+  preferred_api: PhaseDiagram.get_decomp_and_phase_separation_energy
+  fallback_api: PhaseDiagram.get_phase_separation_energy
+  explicit_validation_method: remove_candidate_and_rebuild_hull
+  expected_stable_sign: nonpositive
+  expected_unstable_sign: positive
+  store_raw_official_value: true
+  store_explicit_loo_value_for_validation: true
+  validation_sample_n: 400
+  validation_strata: [snapshot_id, thermo_type, phase_context_dimensionality, rebuilt_is_stable, signed_margin_quantile]
+  required_classification_agreement: 1.0
+  maximum_absolute_difference_eV_per_atom: 1.0e-6
+  elemental_endpoint_policy: explicit_status_and_separate_summary
+  nonunique_decomposition_policy: canonical_plus_degeneracy_audit
+
+cohorts:
+  - id: A1_STRICT
+    identity_confidences: [A1]
+    candidate_identity_unchanged: true
+    require_same_workflow: true
+    require_same_phase_context: true
+  - id: A1_BROAD
+    identity_confidences: [A1]
+    candidate_identity_unchanged: false
+    require_same_workflow: true
+  - id: A1_A2
+    identity_confidences: [A1, A2]
+    candidate_identity_unchanged: false
+  - id: REPORTED_AND_UNIFIED
+    reported_and_unified_flip_only: true
+  - id: UNIFIED_ONLY
+    unified_only_flip_only: true
+
+output:
+  exact_flip_amplitude: data/processed/R3_1/exact_flip_amplitude.parquet
+  signed_stability_state: data/processed/R3_1/signed_stability_state.parquet
+  robust_transition: data/processed/R3_1/robust_transition.parquet
+  manifest: data/manifests/R3_1/manifest.json
+  threshold_summary: reports/R3_1/threshold_summary.csv
+  cohort_summary: reports/R3_1/cohort_summary.csv
+  signed_margin_validation: reports/R3_1/signed_margin_validation.csv
+  join_audit: reports/R3_1/join_audit.csv
+  exclusion_ledger: reports/R3_1/exclusion_ambiguity_ledger.csv
+  report: reports/R3_1/report.json
+
+route_gate:
+  strong:
+    minimum_conditions_met: 2
+    conditions: {N10_strict_STU_gte: 300, N25_strict_STU_gte: 100, F10_strict_STU_gte: 0.15}
+  field:
+    any_condition: {N10_strict_STU_gte: 50, N25_strict_STU_gte: 20, workflow_specific_N10_strict_STU_gte: 30}
+  else_route: ROUTE_BOUNDARY
+
+integrity_gate:
+  require_input_hash_match: true
+  require_unique_keys: true
+  require_zero_unexplained_endpoint_mismatch: true
+  require_signed_margin_validation_pass: true
+  require_threshold_monotonicity: true
+  require_forbidden_reads_zero: true
+  require_full_tests_pass: true
+
+execution:
+  shard_by: [snapshot_id, thermo_type, phase_context_chemsys]
+  workers: 32
+  resume: true
+  atomic_write: true
+  thread_limit_per_worker: 1
+  parquet_compression: zstd
+  parquet_row_group_size: 50000

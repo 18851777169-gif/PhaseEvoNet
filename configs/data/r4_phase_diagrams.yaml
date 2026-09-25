@@ -1,0 +1,60 @@
+task_id: R4.0
+authorization_status: PI_AMENDMENT_2026-08-30
+seed: 42
+
+snapshots:
+  - "2026-04-13"
+
+input:
+  normalized_root: data/interim/R4_0/normalized
+  p1_2_manifest: data/manifests/R4_0/normalization_manifest.json
+  p3_1_report: reports/P3_1/report.json
+
+output:
+  root: data/interim/R4_0/phase
+  phase_entries: data/interim/R4_0/phase_entry_current_release.parquet
+  decompositions: data/interim/R4_0/phase_decomposition_current_release.parquet
+  duplicate_ledger: data/manifests/R4_0/entry_duplicate_ledger.parquet
+  ambiguity_ledger: data/manifests/R4_0/phase_exclusion_ambiguity_ledger.jsonl
+  manifest: data/manifests/R4_0/phase_diagram_manifest.json
+  reference_audit_csv: reports/R4_0/phase_reference_audit.csv
+  reference_audit_json: reports/R4_0/phase_reference_audit.json
+  data_dictionary: reports/R4_0/phase_data_dictionary.csv
+  compatibility_exclusion_ledger: reports/R4_0/compatibility_exclusion_ledger.csv
+
+energy_policy:
+  corrected_energy: energy_plus_correction
+  partition_key: [snapshot_id, thermo_type]
+  entry_key: [snapshot_id, thermo_type, entry_id]
+  cross_workflow_mixing: false
+  duplicate_float_absolute_tolerance: 1.0e-12
+  stable_energy_tolerance_eV_per_atom: 1.0e-8
+  context_dependent_workflows:
+    - GGA_GGA+U_R2SCAN
+  context_contract_status: AMENDED_2026-08-24
+  phase_context_key: [snapshot_id, thermo_type, phase_context_chemsys, entry_id]
+  mixed_base_workflows: [GGA_GGA+U, R2SCAN]
+  mixed_run_type_1: GGA(+U)
+  mixed_run_type_2: R2SCAN
+  check_potcar: false
+
+reference_test:
+  source_entry_selector: energy_type_equals_entry_label
+  absolute_tolerance_eV_per_atom: 1.0e-6
+  required_match_rate: 1.0
+  sample_per_snapshot_thermo_type: 100
+  eligibility_rule_version: COMPATIBILITY_EVALUABLE_2026-08-24
+  allowed_exclusion_reasons:
+    - no_unique_processed_representative
+    - homogeneous_source_unavailable
+  maximum_exclusion_fraction: 0.0005
+
+execution:
+  workers: 8
+  resume_group_parts: true
+  warning_policy: record_fallback_categories
+  structure_cache_entries: 20000
+
+parquet:
+  compression: zstd
+  row_group_size: 50000

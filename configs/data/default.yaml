@@ -1,0 +1,15 @@
+project: phase_evonet
+seed: 42
+raw_data_root: data/raw
+processed_data_root: data/processed
+identity:
+  confidence_levels: [A1, A2, B, C]
+  structure_matcher:
+    ltol: 0.2
+    stol: 0.3
+    angle_tol: 5
+labels:
+  stability_thresholds_mev_per_atom: [0, 10, 25, 50]
+locked_test:
+  enabled: true
+  allow_reads: false

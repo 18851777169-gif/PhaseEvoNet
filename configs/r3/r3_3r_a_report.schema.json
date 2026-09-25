@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PhaseEvoNet R3.3R-A report",
+  "type": "object",
+  "required": [
+    "task_id",
+    "task_status",
+    "gate_status",
+    "input_hashes",
+    "mapping_coverage",
+    "join_checks",
+    "tests",
+    "verification",
+    "forbidden_read_attempts"
+  ],
+  "properties": {
+    "task_id": {
+      "const": "R3.3R-A"
+    },
+    "task_status": {
+      "enum": [
+        "DONE",
+        "BLOCKED"
+      ]
+    },
+    "gate_status": {
+      "enum": [
+        "GO_MAPPING_FROZEN",
+        "ROUTE_LIMITED",
+        "BLOCKED"
+      ]
+    },
+    "forbidden_read_attempts": {
+      "type": "integer",
+      "maximum": 0
+    },
+    "input_hashes": {
+      "type": "object"
+    },
+    "mapping_coverage": {
+      "type": "object"
+    },
+    "join_checks": {
+      "type": "object"
+    },
+    "tests": {
+      "type": "object"
+    },
+    "verification": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}

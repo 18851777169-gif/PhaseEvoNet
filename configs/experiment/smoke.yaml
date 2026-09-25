@@ -1,0 +1,5 @@
+seed: 42
+n_materials: 1600
+n_snapshots: 4
+output_dir: reports/smoke
+model: logistic_regression

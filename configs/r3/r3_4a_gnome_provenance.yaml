@@ -1,0 +1,102 @@
+task_id: R3.4A
+method_version: PHASEEVONET_R3_4A_GNOME_PROVENANCE_V1
+rules_frozen_at_utc: '2026-08-25T18:13:10.466040+00:00'
+seed: 3401
+human_review_rows: 400
+
+scope:
+  allowed:
+    - provenance field and value inventory
+    - release batch and official mapping audit
+    - license and terms audit
+    - P3.2 contextual-entry round-trip
+    - R3.3R frozen crosswalk round-trip
+    - stratified human-review package
+  forbidden:
+    - entry removal
+    - affected-label computation
+    - cascade or concentration computation
+    - network ranking or Gini computation
+    - use of downstream outcomes to define provenance rules
+
+official_gnome_batch_ids:
+  - gnome_r2scan_statics
+recognized_licenses:
+  commercial_reuse:
+    - BY-C
+  noncommercial_research_only:
+    - BY-NC
+
+classification_rules:
+  precedence:
+    - A
+    - B
+    - C
+    - U
+  A:
+    label: direct_verified_gnome
+    all_required:
+      - raw builder_meta.batch_id exactly equals an official_gnome_batch_id
+      - raw and normalized builder license both equal BY-NC
+      - raw source row material_id exactly matches the normalized material_id
+      - raw source object checksum matches the frozen P1.1 manifest
+      - exact P3.2 contextual-entry round-trip passes
+      - exact R3.3R crosswalk round-trip passes
+    prohibited_shortcuts:
+      - release date alone
+      - free-text GNoME, Google, or DeepMind string alone
+      - BY-NC license alone
+  B:
+    label: structured_inherited_or_partial_gnome
+    any_sufficient_pattern:
+      - official batch_id plus missing non-conflicting license, with both round-trips passing
+      - BY-NC plus exact material_id and task_id identity inherited from an A record in another frozen snapshot, with both round-trips passing
+    exclusions:
+      - conflicting BY-C license on a direct official batch record
+      - free-text or date-only evidence
+  C:
+    label: direct_structured_non_gnome_batch
+    all_required:
+      - non-null structured batch_id not in official_gnome_batch_ids
+      - license is not BY-NC
+      - raw source row and both round-trips pass
+  U:
+    label: unresolved
+    applies_when:
+      - no A, B, or C rule passes
+      - evidence conflicts
+      - evidence is only a date, string, or license without structured identity support
+
+official_sources:
+  - evidence_id: MP_DATABASE_VERSIONS
+    url: https://docs.materialsproject.org/changes/database-versions
+    source_type: official_project_documentation
+    supports: GNoME-originated r2SCAN release counts, release dates, BY-NC requirement, explicit API acceptance gate
+  - evidence_id: MP_API_CLIENT_BATCH_GATE
+    url: https://github.com/materialsproject/api/blob/main/mp_api/client/core/client.py
+    source_type: official_source_code
+    supports: exact access-controlled batch identifier gnome_r2scan_statics and BY-NC filtering
+  - evidence_id: GDM_GNOME_REPOSITORY
+    url: https://github.com/google-deepmind/materials_discovery
+    source_type: official_dataset_repository
+    supports: GNoME dataset identity and CC BY-NC 4.0 data license
+  - evidence_id: GDM_GNOME_DATASET_DESCRIPTOR
+    url: https://github.com/google-deepmind/materials_discovery/blob/main/DATASET.md
+    source_type: official_dataset_documentation
+    supports: public dataset layout, MaterialId field, version history, energies, and hull context
+  - evidence_id: NATURE_GNOME_PAPER
+    url: https://www.nature.com/articles/s41586-023-06735-9
+    source_type: primary_paper
+    supports: GNoME method, release provenance, and permanent Materials Project link DOI 10.17188/2009989
+
+frozen_inputs:
+  data/processed/R3_3R/competitor_identity_crosswalk.parquet: c001d249c9958176e76d0e51fde1fe033cc4df8d3eae98b99dcabe61ede236d6
+  data/processed/R3_3/competitor_change.parquet: 7e2cbbdf53236ad7cd837f5c0c6295323fc772743ba778883ad64dfbd7cdf603
+  data/interim/P3_2/phase_entry_unified.parquet: 9236b0fdaeafe14b453afba818d26e4ca6d435812486b0924cb85b5fb26e1f7b
+  data/manifests/P1_1/snapshot_manifest.jsonl: 378df7a55790d6afa9e82eea52f76135063e05a06d80e1461d203f55718c96b9
+
+terminal_rule:
+  no_real_human_review: WAITING_FOR_HUMAN
+  human_review_complete_and_no_material_conflict: GO
+  missing_required_evidence_or_inputs: BLOCKED
+  license_or_provenance_prohibits_the_analysis: NO_GO

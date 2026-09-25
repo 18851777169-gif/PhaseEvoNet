@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+title: "PhaseEvoNet: Version-Aware Phase-Stability Benchmarking"
+type: software
+version: 0.1.0
+date-released: 2026-09-26
+license: MIT
+repository-code: "https://github.com/18851777169-gif/PhaseEvoNet"
+authors:
+  - family-names: "Cheng"
+    given-names: "Lei"
+  - family-names: "Liu"
+    given-names: "Jun"

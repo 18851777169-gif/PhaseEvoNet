@@ -1,0 +1,72 @@
+task_id: P4.1
+seed: 42
+
+input:
+  transition_labels: data/interim/P3_1/transition_label.parquet
+  lineage: data/interim/P2_2/lineage.parquet
+  attribution: data/interim/P3_3/transition_attribution.parquet
+  p2_2_report: reports/P2_2/report.json
+  p3_1_report: reports/P3_1/report.json
+  p3_3_manifest: data/manifests/P3_3/attribution_manifest.json
+  p3_3_report: reports/P3_3/report.json
+
+output:
+  root: data/processed/P4_1
+  survival_cohort: data/processed/P4_1/survival_cohort.parquet
+  survival_curve: data/processed/P4_1/survival_curve.csv
+  interval_fragility: data/processed/P4_1/interval_fragility.csv
+  transition_fragility: data/processed/P4_1/transition_fragility.parquet
+  chemistry_fragility: data/processed/P4_1/chemistry_fragility.csv
+  element_pair_fragility: data/processed/P4_1/element_pair_fragility.csv
+  attribution_by_chemistry: data/processed/P4_1/attribution_by_chemistry.csv
+  manifest: data/manifests/P4_1/descriptive_atlas_manifest.json
+  data_dictionary: reports/P4_1/data_dictionary.csv
+  figure_metadata: reports/P4_1/figure_metadata.json
+  figure_directory: reports/P4_1/figures
+
+population:
+  identity_confidences: [A1, A2]
+  baseline_snapshot: "2022-10-28"
+  snapshot_order: ["2022-10-28", "2023-11-01", "2024-12-18", "2025-09-25"]
+  survival_identity_unit: canonical_lineage_id_plus_thermo_type
+  survival_baseline_label: stable
+  survival_event: first_reported_stable_to_unstable
+  loss_to_followup: right_censor_at_last_observed_snapshot
+  fragility_risk_set: all_observed_high_confidence_source_stable_transitions
+  fragility_event: reported_stable_to_unstable
+  reported_label_basis: Materials_Project_snapshot_reported_is_stable
+
+statistics:
+  confidence_level: 0.95
+  survival_estimator: discrete_snapshot_Kaplan_Meier
+  survival_ci: Greenwood_log_log
+  proportion_ci: Wilson
+  days_per_month: 30.4375
+  days_per_year: 365.25
+  half_life_rule: first_observed_snapshot_time_with_survival_at_or_below_0.5
+
+atlas:
+  exact_chemsys_minimum_at_risk_for_display: 20
+  element_pair_minimum_at_risk_for_display: 100
+  top_elements_by_exposure: 24
+  top_attribution_chemsys_by_flip_count: 15
+  unary_diagonal_rule: each_present_element_contributes_to_diagonal
+  multielement_pair_rule: each_unordered_cooccurring_element_pair_once_per_transition
+
+figures:
+  formats: [png, svg, pdf]
+  dpi: 180
+  style_version: P4_1_FROZEN_V1
+  survival_stem: figure_2_stability_label_survival
+  atlas_stem: figure_4_chemical_space_fragility_atlas
+
+gate:
+  minimum_important_high_confidence_flips: 1500
+  minimum_attribution_fraction: 0.60
+  require_nonempty_survival_risk_set: true
+  require_at_least_one_survival_event: true
+  require_at_least_one_displayable_atlas_cell: true
+
+parquet:
+  compression: zstd
+  row_group_size: 50000

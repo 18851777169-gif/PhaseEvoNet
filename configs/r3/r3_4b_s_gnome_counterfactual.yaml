@@ -1,0 +1,131 @@
+task_id: R3.4B-S
+seed: 42
+method_version: PHASEEVONET_R3_4B_S_GNOME_COUNTERFACTUAL_V1
+
+route:
+  upstream_r3_3r_b: ROUTE_BOUNDED
+  allowed_outputs:
+    - candidate_level_reversal_counts
+    - entry_candidate_relation_counts
+    - identity_range_without_concentration_headline
+    - pre_outcome_matched_database_association
+  forbidden_outputs:
+    - gini
+    - hhi
+    - top_share
+    - hub_ranking
+    - physical_causality
+
+input:
+  r3_4a_report: reports/R3_4A/report.json
+  r3_4a_verification: reports/R3_4A/verification.json
+  r3_4a_attestation: reports/R3_4A/human_review_attestation.json
+  r3_4a_decision: R3_4A_DECISION_MEMO.md
+  r3_4a_manifest: data/manifests/R3_4A/provenance_mapping_manifest.json
+  r3_4a_classification: data/processed/R3_4A/gnome_provenance_classification.parquet
+  r3_4a_rules: configs/r3/r3_4a_gnome_provenance.yaml
+  api_probe: reports/R3_4B_S/minimal_api_probe.json
+  r3_3r_b_report: reports/R3_3R_B/report.json
+  r3_3r_b_decision: R3_3R_B_DECISION_MEMO.md
+  exact_flip_amplitude: data/processed/R3_1/exact_flip_amplitude.parquet
+  phase_entries: data/interim/P3_2/phase_entry_unified.parquet
+  competitor_change: data/processed/R3_3/competitor_change.parquet
+  identity_resolved_edge: data/processed/R3_3R/identity_resolved_edge.parquet
+
+expected_sha256:
+  r3_4a_report: eebfffda13469425e4ea8ec91a5870837320a3c689b3670178163a86be073586
+  r3_4a_verification: 03f7425f35da516594a533303ed7c72050275ddd2e9491b9d221a965ef0d6204
+  r3_4a_attestation: ad7c16e68665dada84d898301d3414b9681ca125de3ba93a9966b12675554dc3
+  r3_4a_decision: c3f41518d06dd8392310e17c74b7d34f5b36f796450d18dfe68543260feb6304
+  r3_4a_manifest: 7f53fbbd84cb04032e258e004d62a3438936fdb4b346aaf729d4d0ab73c94b18
+  r3_4a_classification: 81c5a9d433c70d37abfe62d74c3abb8f6e9a0d9270d97b9c402dc555c258b186
+  r3_4a_rules: f3a67b2d4bb34665fdee9a484ea6bb688198dfd473d0f4d6828c149fcf4e7b51
+  api_probe: 9df349de02874c06109b275a346e98f5e6d7170819099dca97933c5a0413bc48
+  r3_3r_b_report: 6ae3792defa234c93c76d8dbb0971cae999d579d9eab0f26d22b7dc722568c52
+  r3_3r_b_decision: bc7cc4197e63ef71ac5145dd3b1570b6fec10b59f5510cd1df348b552a37101a
+  exact_flip_amplitude: d7dada63ac6b7f3ffa6ed571bc1f81d588e6858f6aa3065c1f45271a8c0bbd0b
+  phase_entries: 9236b0fdaeafe14b453afba818d26e4ca6d435812486b0924cb85b5fb26e1f7b
+  competitor_change: 7e2cbbdf53236ad7cd837f5c0c6295323fc772743ba778883ad64dfbd7cdf603
+  identity_resolved_edge: ceb95c0dff14f2e3b003a70e3cee8d79a038a4ab4a9394ef5fae7cff8fa31ccd
+
+population:
+  expected_rows: 1190
+  identity_confidences: [A1]
+  direction: stable_to_unstable
+  candidate_identity_unchanged: true
+  same_workflow: true
+  same_phase_context: true
+  primary_threshold_eV_per_atom: 0.010
+
+classification:
+  primary_inclusion: [A]
+  sensitivity_inclusion: [A, B]
+  require_target_only_arrival: true
+  require_human_review_eligible: true
+  never_include: [C, U]
+
+counterfactual:
+  thresholds_eV_per_atom: [0.0, 0.005, 0.010, 0.025]
+  tolerance_eV_per_atom: 1.0e-6
+  exact_zero_tolerance_eV_per_atom: 1.0e-8
+  active_amount_tolerance: 1.0e-10
+  never_remove_evaluated_candidate: true
+  preserve_retained_energy: true
+  preserve_retained_correction: true
+  preserve_workflow_partition: true
+  validation_sample_n: 300
+
+matching:
+  unit: contextual_arrival_entry
+  comparison: non_gnome_target_only_arrival
+  ratio: 1
+  with_replacement: true
+  exact_strata:
+    - target_snapshot
+    - thermo_type
+    - chemical_dimensionality
+    - entry_stability_class_at_arrival
+  numeric_covariates:
+    - composition_complexity
+    - source_context_entry_count
+    - source_context_competitor_count
+    - provenance_completeness
+  prohibited_variables:
+    - cascade_size
+    - target_decomposition_active
+    - candidate_impact
+    - removal_effect
+  distance_caliper: 4.0
+  minimum_matched_fraction: 0.80
+  maximum_absolute_smd: 0.25
+  bootstrap_unit: candidate_lineage_id
+  bootstrap_replicates: 2000
+
+license:
+  accepted_group: TERMS:ACCEPT-NC
+  noncommercial_only: true
+  raw_restricted_public_release: false
+  require_api_access: true
+  public_identifier_pattern: "mp-[0-9]+"
+
+output:
+  state: data/processed/R3_4B_S/gnome_counterfactual_state.parquet
+  transition: data/processed/R3_4B_S/gnome_counterfactual_transition.parquet
+  gnome_edges: data/processed/R3_4B_S/gnome_competitor_candidate_edge.parquet
+  matched_design: data/processed/R3_4B_S/matched_design.parquet
+  matched_entry_outcomes: data/processed/R3_4B_S/matched_entry_outcomes.parquet
+  manifest: data/manifests/R3_4B_S/counterfactual_manifest.json
+  matched_design_manifest: data/manifests/R3_4B_S/matched_design_manifest.json
+  report: reports/R3_4B_S/report.json
+  verification: reports/R3_4B_S/verification.json
+  report_dir: reports/R3_4B_S
+
+gate:
+  require_r3_4a_go: true
+  require_api_access: true
+  require_full_state_reproduction: true
+  require_from_scratch_validation: true
+  require_A_only_primary: true
+  require_A_plus_B_sensitivity: true
+  require_forbidden_reads_zero: true
+  require_full_tests_pass: true

@@ -1,0 +1,66 @@
+task_id: P2.2
+seed: 42
+
+snapshots:
+  - "2022-10-28"
+  - "2023-11-01"
+  - "2024-12-18"
+  - "2025-09-25"
+
+input:
+  normalized_root: data/interim/P1_2
+  candidate_edges: data/interim/P2_1/identity_candidate_edges.parquet
+  candidate_manifest: data/manifests/P2_1/candidate_manifest.json
+  p2_1_report: reports/P2_1/report.json
+
+output:
+  root: data/interim/P2_2
+  identity_edges: data/interim/P2_2/identity_edge.parquet
+  lineage_members: data/interim/P2_2/lineage.parquet
+  lineage_summary: data/interim/P2_2/lineage_summary.parquet
+  relationship_events: data/interim/P2_2/identity_events.parquet
+  manifest: data/manifests/P2_2/identity_manifest.json
+  ambiguity_ledger: data/manifests/P2_2/exclusion_ambiguity_ledger.jsonl
+  a2_audit_csv: reports/P2_2/a2_precision_audit.csv
+  a2_audit_json: reports/P2_2/a2_precision_audit.json
+  data_dictionary: reports/P2_2/data_dictionary.csv
+
+confidence:
+  a1:
+    require_same_material_id: true
+    minimum_shared_tasks: 1
+  a2:
+    require_same_composition: true
+    require_no_a1_endpoint_conflict: true
+    require_mutual_unique_best: true
+
+structure_matcher:
+  ltol: 0.20
+  stol: 0.30
+  angle_tol: 5.0
+  primitive_cell: false
+  scale: true
+  attempt_supercell: false
+  allow_subset: false
+
+independent_audit_matcher:
+  ltol: 0.10
+  stol: 0.20
+  angle_tol: 3.0
+  primitive_cell: false
+  scale: true
+  attempt_supercell: false
+  allow_subset: false
+
+audit:
+  maximum_sample_rows: 400
+  minimum_a2_precision: 0.95
+  audit_all_when_below_maximum: true
+
+gate:
+  minimum_high_confidence_lineages: 50000
+  minimum_a2_precision: 0.95
+
+parquet:
+  compression: zstd
+  row_group_size: 50000

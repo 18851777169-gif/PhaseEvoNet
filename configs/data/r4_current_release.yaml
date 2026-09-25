@@ -1,0 +1,72 @@
+task_id: R4.0
+seed: 42
+source_manifest: data/manifests/R4_0/source_objects.jsonl
+output_root: data/interim/R4_0/normalized
+combined_output_root: data/interim/R4_0/combined_normalized
+historical_normalized_root: data/interim/P1_2
+combined_historical_snapshots: [2025-09-25]
+manifest_dir: data/manifests/R4_0
+report_dir: reports/R4_0
+compression: zstd
+row_group_size: 5000
+input_batch_size: 1000
+critical_completeness_threshold: 0.95
+critical_fields:
+  raw_material:
+    - snapshot_id
+    - material_id
+    - composition_reduced_json
+    - structure_json
+    - task_ids_json
+  raw_task:
+    - snapshot_id
+    - material_id
+    - task_id
+    - calc_type
+    - task_type
+    - run_type
+  raw_thermo:
+    - snapshot_id
+    - material_id
+    - thermo_id
+    - thermo_type
+    - composition_reduced_json
+    - formation_energy_per_atom
+    - energy_above_hull
+    - is_stable
+  raw_thermo_entry:
+    - snapshot_id
+    - material_id
+    - thermo_id
+    - entry_label
+    - energy
+    - structure_json
+  raw_provenance:
+    - snapshot_id
+    - material_id
+identity:
+  common_panel_index: data/processed/R3_5/common_panel_index.parquet
+  source_snapshot: "2025-09-25"
+  target_snapshot: "2026-04-13"
+  mapping_output: data/processed/R4_0/panel_identity_mapping.parquet
+  structure_matcher:
+    ltol: 0.20
+    stol: 0.30
+    angle_tol: 5.0
+    primitive_cell: false
+    scale: true
+    attempt_supercell: false
+    allow_subset: false
+  independent_audit_matcher:
+    ltol: 0.10
+    stol: 0.20
+    angle_tol: 3.0
+    primitive_cell: false
+    scale: true
+    attempt_supercell: false
+    allow_subset: false
+  audit_maximum_rows: 400
+  minimum_a2_precision: 0.95
+benchmark:
+  phase_manifest: data/manifests/R4_0/phase_diagram_manifest.json
+  phase_entries: data/interim/R4_0/phase_entry_current_release.parquet

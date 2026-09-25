@@ -1,0 +1,55 @@
+task_id: R3.3R-A
+seed: 42
+method_version: PHASEEVONET_R3_3R_IDENTITY_MAPPING_V1
+
+input:
+  r3_3_report: reports/R3_3/report.json
+  r3_3_verification: reports/R3_3/verification.json
+  competitor_change: data/processed/R3_3/competitor_change.parquet
+  competitor_candidate_edge: data/processed/R3_3/competitor_candidate_edge.parquet
+  p2_2_lineage: data/interim/P2_2/lineage.parquet
+  p2_2_manifest: data/manifests/P2_2/identity_manifest.json
+  p1_2_root: data/interim/P1_2
+
+frozen_hashes:
+  r3_3_report: 28a519b81f0a6cd984daaef5f04dbdc2fc8a2580dbfba8c8a2bf4003dc15da34
+  competitor_change: 7e2cbbdf53236ad7cd837f5c0c6295323fc772743ba778883ad64dfbd7cdf603
+  competitor_candidate_edge: 5299c5c265c5d96639d8225ad9fc98a7265acc522dd6fbe079cdd7f23440fcc4
+  p2_2_lineage: 1762b6c3c9e7c3badccb151eac34181a3b7afcda23c2997777ae78aaba969cee
+
+mapping:
+  identity_side_policy: target_else_source
+  direct_key: [snapshot_id, material_id]
+  task_bridge_key: [snapshot_id, task_id]
+  allow_task_bridge_only_when_material_id_missing: true
+  require_unique_lineage_match: true
+  require_reduced_composition_concordance: true
+  require_cross_side_lineage_concordance: true
+  allow_composition_only_mapping: false
+  unresolved_policy: ledger_not_impute
+
+identity_ladder:
+  id0_contextual: existing_competitor_contextual_id
+  id1_strict_entry: existing_competitor_canonical_id
+  id2_primary_fields: [p2_canonical_lineage_id, thermo_type, identity_workflow]
+  id3_aggressive_fields: [p2_canonical_lineage_id]
+  never_merge_across_workflow_primary: true
+
+coverage_gate:
+  impact_edge_definitions: [necessary_10meV, necessary_25meV, contributory_5meV, minimal_set_member]
+  minimum_relation_coverage_each: 0.98
+  minimum_candidate_coverage_each: 0.99
+  maximum_primary_composition_mismatches: 0
+  maximum_cross_side_lineage_disagreements: 0
+  maximum_unapproved_join_expansion: 0
+
+bootstrap_diagnostic:
+  reproduce_old_algorithm: true
+  synthetic_graphs: [one_to_one_contextual, one_shared_hub, two_equal_hubs, dominant_plus_tail]
+  prohibit_formal_new_network_metrics_in_r3_3r_a: true
+
+output:
+  crosswalk: data/processed/R3_3R/competitor_identity_crosswalk.parquet
+  manifest: data/manifests/R3_3R/identity_mapping_manifest.json
+  manifest_hash: data/manifests/R3_3R/identity_mapping_manifest.sha256
+  report_dir: reports/R3_3R_A

@@ -1,0 +1,39 @@
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.tmp/
+*.egg-info/
+build/
+dist/
+
+# Credentials and local environment files
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+.phaseevonet_secrets/
+
+# Study data and generated outputs
+/data/
+/reports/
+/artifacts/
+/models/
+/outputs/
+/submission/
+/archive/
+
+# Editor and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.tmp
+*.log

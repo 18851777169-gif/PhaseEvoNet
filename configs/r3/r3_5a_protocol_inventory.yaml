@@ -1,0 +1,47 @@
+task_id: R3.5A
+seed: 42
+method_version: PHASEEVONET_R3_5A_PROTOCOL_FREEZE_V2
+
+inventory:
+  model_roots:
+    - models/P5_1
+    - models/V2_2
+  prediction_roots:
+    - data/processed/P5_1
+    - data/processed/V2_2
+    - reports/P5_1
+    - reports/V2_2
+  source_only_feature_roots:
+    - data/processed/V2_1
+    - data/processed/P4_2
+  allow_regenerate_predictions_from_frozen_model: true
+  allow_retraining: false
+  allow_target_label_access_before_protocol_freeze: false
+
+panel:
+  identity: canonical_lineage_id
+  require_prediction_unique_per_model_candidate: true
+  require_fixed_prediction_bytes_across_label_versions: true
+  workflow_partitioned: true
+  primary_panel: exact_intersection
+  expanded_panel: sensitivity_only
+
+labels:
+  definitions: [exact_zero, within_10meV, within_25meV]
+  continuous_secondary: [energy_above_hull, signed_margin]
+
+metrics_to_freeze:
+  primary: [average_precision, precision_at_budget, recall_at_budget, brier_score, error_transition]
+  secondary: [roc_auc, expected_calibration_error, spearman_continuous]
+  budgets: [100, 500, 1000, top_1pct, top_5pct]
+
+bootstrap:
+  unit: canonical_lineage_id
+  replicates: 2000
+  preserve_all_versions_and_models_per_draw: true
+
+output:
+  protocol: data/manifests/R3_5/protocol.json
+  protocol_hash: data/manifests/R3_5/protocol.sha256
+  protocol_markdown: R3_5_PROTOCOL_FROZEN.md
+  report_dir: reports/R3_5A

@@ -1,0 +1,29 @@
+task_id: P2.1
+seed: 42
+snapshots:
+  - "2022-10-28"
+  - "2023-11-01"
+  - "2024-12-18"
+  - "2025-09-25"
+input_root: data/interim/P1_2
+input_manifest: data/manifests/P1_2/normalization_manifest.json
+output_path: data/interim/P2_1/identity_candidate_edges.parquet
+manifest_dir: data/manifests/P2_1
+report_dir: reports/P2_1
+compression: zstd
+row_group_size: 50000
+structure_fingerprint:
+  coordinate_decimals: 6
+  lattice_decimals: 6
+candidate_methods:
+  exhaustive_reduced_composition_block: true
+  force_same_material_id_anchor: true
+  force_shared_task_anchor: true
+  force_shared_external_id_anchor: true
+  force_exact_structure_fingerprint_anchor: true
+audit_gate:
+  required_anchor_recall: 1.0
+  minimum_source_material_coverage: 0.99
+  require_unique_edges: true
+  require_adjacent_forward_snapshots_only: true
+  sample_per_anchor_category: 100

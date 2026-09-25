@@ -1,0 +1,50 @@
+task_id: P1.1
+snapshots:
+  - "2022-10-28"
+  - "2023-11-01"
+  - "2024-12-18"
+  - "2025-09-25"
+collections:
+  - materials
+  - thermo
+  - provenance
+source:
+  endpoint: https://materialsproject-build.s3.us-east-1.amazonaws.com
+  transfer_endpoints:
+    - https://materialsproject-build.s3.us-east-1.amazonaws.com
+    - https://materialsproject-build.s3.amazonaws.com
+    - https://s3.us-east-1.amazonaws.com/materialsproject-build
+    - https://materialsproject-build.s3-external-1.amazonaws.com
+    - https://s3.amazonaws.com/materialsproject-build
+    - https://materialsproject-build.s3.dualstack.us-east-1.amazonaws.com
+    - https://s3.dualstack.us-east-1.amazonaws.com/materialsproject-build
+  license: Materials Project Terms of Use; embedded object licenses must also be honored
+download:
+  transfer_engine: aria2
+  timeout_seconds: 45
+  retries: 4
+  workers: 16
+  curl_parallel_max: 14
+  curl_retries: 20
+  curl_max_time_seconds: 1800
+  curl_passes: 3
+  aria2_executable: tools/aria2/aria2-1.37.0-win-64bit-build1/aria2c.exe
+  aria2_large_threshold_bytes: 1000000
+  aria2_large_concurrent: 7
+  aria2_large_splits: 1
+  aria2_small_concurrent: 64
+  aria2_max_tries: 0
+  aria2_timeout_seconds: 30
+  aria2_lowest_speed_limit: 1K
+  aria2_summary_interval_seconds: 300
+  aria2_console_log_level: warn
+  aria2_quiet: true
+schema_contract:
+  jsonl: jsonl-top-level-fields-and-json-types-v1
+  parquet: arrow-schema-without-metadata-v1
+exclusions:
+  - collection: summary
+    snapshot: "2025-09-25"
+    reason: Sampled objects were modified after the nominal dated namespace.
+  - batch: access-controlled-or-BY-NC
+    reason: Requires separate license acceptance and is outside the qualifying collection contract.

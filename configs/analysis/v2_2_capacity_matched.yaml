@@ -1,0 +1,165 @@
+task_id: V2.2
+status: FROZEN_BEFORE_TRAINING
+authorization: PI instruction received 2026-08-25
+method_version: PHASEEVONET_V2_2_CAPACITY_MATCHED_V1
+seed: 42
+declared_seed_schedule: [42, 43, 44, 45, 46]
+
+input:
+  v2_1_report: reports/V2_1/report.json
+  v2_1_report_sidecar: reports/V2_1/report.sha256
+  v2_1_model_matrix: configs/analysis/v2_1_model_matrix.yaml
+  feature_schema: data/manifests/V2_1/feature_schema.json
+  source_features: data/processed/V2_1/source_features.parquet
+  cause_specific_targets: data/processed/V2_1/cause_specific_targets.parquet
+  interval_exposure: data/processed/V2_1/interval_exposure.parquet
+  expected_sha256:
+    v2_1_report: bcb5c3ec46e613af09bf079edc28d813bb36d271d37732cd0bfbf3fba21d9080
+    v2_1_model_matrix: 9e014a77466f9a3be6b2db9773c1ff7a0d2b5f34916cb3f057c8b45106733963
+    feature_schema: a4618ad6510eed68892b773042cfdbbd08d976f5522af33aea187920edfe2307
+    source_features: d1569cbf2afcd749814672910a09dd2f6fba58781549122d0577c8bf60464aaf
+    cause_specific_targets: 5c7483624f598253f669d28dcb7f217cace4048f12e76528e6ed0b4e7d033152
+    interval_exposure: 885db672f0e651b02fc712549fc4cd49de3acd4b498e3fadb46ba2ee5531afd1
+
+population:
+  train_role: train
+  validation_role: validation
+  split_unit: canonical_lineage_id
+  calibration_fold_unit: canonical_lineage_id
+  bootstrap_unit: canonical_lineage_id
+  train_interval: 2022-10-28->2023-11-01
+  validation_interval: 2023-11-01->2024-12-18
+  reference_exposure_days: 369
+  validation_exposure_days: 413
+  roles_prohibited: [locked_test]
+
+estimands:
+  stable_to_unstable_event:
+    target: stable_to_unstable_event
+    risk_column: stable_to_unstable_at_risk
+    models: [M0, M1, M2, M3, M4, M5]
+    exposure_adjustment: complementary_log_log_rate_rescaling
+  competitor_inventory_revision_event:
+    target: competitor_inventory_revision_event
+    risk_column: null
+    models: [M0, M1, M2, M3, M4]
+    exposure_adjustment: complementary_log_log_rate_rescaling
+  candidate_displacement_event:
+    target: candidate_displacement_event
+    risk_column: conditional_displacement_eligible
+    models: [M0, M1, M2, M3, M4]
+    exposure_adjustment: none_conditional_on_arrival
+
+shared_budget:
+  algorithm_class: sklearn.ensemble.HistGradientBoostingClassifier
+  deterministic_estimator: true
+  execution_seed: 42
+  effective_total_boosting_iterations: 250
+  hyperparameter_trials: 1
+  early_stopping: false
+  learning_rate: 0.05
+  max_leaf_nodes: 15
+  min_samples_leaf: 50
+  l2_regularization: 1.0
+  max_bins: 255
+  class_weight: balanced
+  missingness_policy: explicit_indicator_then_zero_fill
+  calibration_method: sigmoid_lineage_group_crossfit_on_training_only
+  calibration_folds: 5
+  calibration_C: 1000000.0
+  no_test_time_recalibration: true
+  target_prevalence_access: prohibited
+
+M5:
+  final_estimand: stable_to_unstable_event
+  combination: calibrated_probability_product
+  competitor_arrival:
+    target: hull_relevant_competitor_arrival_event
+    risk_column: stable_to_unstable_at_risk
+    feature_set: M5_arrival
+    boosting_iterations: 125
+    exposure_adjustment: complementary_log_log_rate_rescaling
+  displacement_vulnerability:
+    target: candidate_displacement_event
+    risk_column: conditional_displacement_eligible
+    feature_set: M5_displacement
+    boosting_iterations: 125
+    exposure_adjustment: none_conditional_on_arrival
+
+comparison:
+  non_relational_candidates: [M0, M1, M3]
+  flagship_relation_model: M4
+  primary_increments:
+    static_relation_increment: [M2, M1]
+    temporal_growth_increment: [M3, M1]
+    dynamic_relation_increment: [M4, M3]
+    mechanism_factorization_increment: [M5, M4]
+  strongest_non_relational_selection:
+    role: validation
+    order: [average_precision_desc, brier_asc, ece_asc, model_name_asc]
+  stable_to_unstable_is_independent_hard_gate: true
+  other_primary_estimands_are_diagnostic_and_cannot_rescue_failure: true
+
+evaluation:
+  metrics: [average_precision, brier, ece_10, top_decile_enrichment]
+  bootstrap_method: paired_lineage_multinomial
+  bootstrap_replicates: 1000
+  confidence_level: 0.95
+  top_fraction: 0.10
+  ece_bins: 10
+  numerical_tolerance: 1.0e-12
+  chemistry_strata:
+    field: source_chemsys_dimensionality
+    buckets:
+      - {name: dimensionality_1, minimum: 1, maximum: 1}
+      - {name: dimensionality_2, minimum: 2, maximum: 2}
+      - {name: dimensionality_3, minimum: 3, maximum: 3}
+      - {name: dimensionality_4_plus, minimum: 4, maximum: null}
+    favorable_rule: average_precision_difference_positive_and_brier_difference_nonpositive
+    material_adverse_rule: relative_average_precision_change_le_minus_20pct_or_relative_brier_reduction_le_minus_10pct
+
+development_gate:
+  scope: development_validation_only
+  minimum_relative_average_precision_improvement: 0.20
+  minimum_relative_brier_reduction: 0.10
+  maximum_ece: 0.04
+  minimum_top_decile_enrichment: 3.0
+  minimum_coherent_chemistry_strata: 4
+  require_M4_minus_M3_lineage_bootstrap_95pct_lower_bound_gt_zero: true
+  require_no_material_adverse_chemistry_stratum: true
+  require_zero_train_validation_lineage_overlap: true
+  require_zero_locked_outcome_reads: true
+  require_zero_format_only_events: true
+  require_zero_unledgered_errors: true
+  confirmation_direction_gate: DEFERRED_NOT_ASSESSABLE_IN_V2_2
+
+forbidden:
+  read_paths_containing:
+    - data/locked
+    - locked_test
+    - confirmation_a
+    - confirmation_b
+    - 2025-09-25->2026-04-13
+  target_or_stratum_prevalence_for_calibration: true
+  deep_models: true
+  confirmation_evaluation: true
+  hyperparameter_tuning: true
+
+output:
+  root: reports/V2_2
+  models_root: models/V2_2
+  manifest: data/manifests/V2_2/model_manifest.json
+  predictions: reports/V2_2/development_predictions.parquet
+  metrics: reports/V2_2/metrics.csv
+  factorial_comparison: reports/V2_2/factorial_comparison.csv
+  bootstrap: reports/V2_2/lineage_bootstrap.csv
+  chemistry_strata: reports/V2_2/chemistry_strata.csv
+  calibration: reports/V2_2/calibration.csv
+  gate: reports/V2_2/development_gate.json
+  audit: reports/V2_2/integrity_audit.json
+  report: reports/V2_2/report.json
+  report_sidecar: reports/V2_2/report.sha256
+
+parquet:
+  compression: zstd
+  row_group_size: 50000

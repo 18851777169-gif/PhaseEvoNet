@@ -1,0 +1,13 @@
+seed: 42
+split: temporal_locked
+model:
+  name: phase_evonet
+  crystal_encoder: frozen
+  polymorph_set_layer: true
+  decomposition_hypergraph: true
+  temporal_head: discrete_hazard
+  multitask: true
+calibration:
+  method: isotonic
+  selective_prediction: true
+metrics: [average_precision, brier, ece, top_decile_enrichment]

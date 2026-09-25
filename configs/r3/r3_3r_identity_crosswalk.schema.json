@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PhaseEvoNet R3.3R competitor identity crosswalk row",
+  "type": "object",
+  "required": [
+    "transition_id",
+    "candidate_lineage_id",
+    "competitor_contextual_id",
+    "competitor_canonical_id_r3_3",
+    "identity_side",
+    "identity_snapshot",
+    "thermo_type",
+    "source_workflow",
+    "identity_workflow",
+    "mapping_status",
+    "mapping_method",
+    "composition_concordant",
+    "id0_contextual",
+    "id1_strict_entry",
+    "method_version"
+  ],
+  "properties": {
+    "transition_id": {
+      "type": "string"
+    },
+    "candidate_lineage_id": {
+      "type": "string"
+    },
+    "competitor_contextual_id": {
+      "type": "string"
+    },
+    "competitor_canonical_id_r3_3": {
+      "type": "string"
+    },
+    "identity_side": {
+      "enum": [
+        "target",
+        "source"
+      ]
+    },
+    "identity_snapshot": {
+      "type": "string"
+    },
+    "material_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "task_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "entry_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "thermo_type": {
+      "type": "string"
+    },
+    "source_workflow": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "composition_signature": {
+      "type": "string"
+    },
+    "p2_canonical_lineage_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "p2_lineage_confidence": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "p2_high_confidence": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "mapping_method": {
+      "enum": [
+        "direct_material",
+        "task_bridge",
+        "unresolved"
+      ]
+    },
+    "mapping_status": {
+      "enum": [
+        "mapped",
+        "unresolved",
+        "conflict"
+      ]
+    },
+    "composition_concordant": {
+      "type": "boolean"
+    },
+    "cross_side_lineage_concordant": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "unresolved_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "id0_contextual": {
+      "type": "string"
+    },
+    "id1_strict_entry": {
+      "type": "string"
+    },
+    "id2_lineage_thermo_workflow": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "id3_lineage_only": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "method_version": {
+      "type": "string"
+    },
+    "target_workflow": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "identity_workflow": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,102 @@
+task_id: R3.3
+seed: 42
+method_version: PHASEEVONET_R3_3_ATTRIBUTION_CASCADE_V1
+
+input:
+  r3_1_report: reports/R3_1/report.json
+  exact_flip_amplitude: data/processed/R3_1/exact_flip_amplitude.parquet
+  robust_transition: data/processed/R3_1/robust_transition.parquet
+  phase_entries: data/interim/P3_2/phase_entry_unified.parquet
+  phase_decompositions: data/interim/P3_2/phase_decomposition.parquet
+  transition_attribution: data/interim/P3_3/transition_attribution.parquet
+  counterfactual_values: data/interim/P3_3/counterfactual_value.parquet
+
+population:
+  primary_direction: stable_to_unstable
+  primary_threshold_eV_per_atom: 0.010
+  stringent_threshold_eV_per_atom: 0.025
+  primary_identity_confidences: [A1]
+  primary_candidate_identity_unchanged: true
+  require_same_thermo_type: true
+  require_same_phase_context_chemsys: true
+
+attribution_sensitivity:
+  players:
+    - competitor_inventory
+    - uncorrected_energy
+    - compatibility_correction
+    - candidate_identity
+  summaries:
+    - exact_shapley
+    - single_switch
+    - leave_one_out
+    - total_effect
+    - harsanyi_interaction
+  rank_by: absolute_contribution
+  reconstruct_all_16_coalitions: true
+  tolerance_eV_per_atom: 1.0e-6
+
+competitor_identity:
+  hierarchy:
+    - canonical_material_lineage
+    - normalized_task_entry_composition_workflow
+    - blake2b128_provenance_signature
+  never_merge_across_workflow: true
+  preserve_contextual_id: true
+
+active_decomposition:
+  minimum_component_amount: 1.0e-10
+  nonunique_policy: canonical_plus_sampled_alternate_optima
+  alternate_optima_sample_n: 300
+
+single_removal:
+  exact_thresholds_eV_per_atom: [0.0, 0.010, 0.025]
+  contributory_delta_eV_per_atom: 0.005
+  candidate_pool:
+    - target_only_arrival
+    - shared_energy_change
+    - shared_correction_change
+  preserve_retained_energies_and_corrections: true
+
+minimal_set:
+  primary_threshold_eV_per_atom: 0.010
+  exact_pool_max_entries: 20
+  branch_and_bound_node_budget: 1000000
+  wall_time_limit_seconds_per_candidate: 900
+  greedy_upper_bound: true
+  store_lower_and_upper_bounds: true
+  never_label_greedy_as_exact: true
+
+network:
+  edge_definitions:
+    - selected_active
+    - necessary_10meV
+    - necessary_25meV
+    - contributory_5meV
+    - minimal_set_member
+  concentration_top_fractions: [0.01, 0.05, 0.10]
+  bootstrap_unit: canonical_lineage_id
+  bootstrap_replicates: 2000
+
+output:
+  attribution_sensitivity: data/processed/R3_3/attribution_sensitivity.parquet
+  competitor_change: data/processed/R3_3/competitor_change.parquet
+  competitor_candidate_edge: data/processed/R3_3/competitor_candidate_edge.parquet
+  minimal_competitor_set: data/processed/R3_3/minimal_competitor_set.parquet
+  manifest: data/manifests/R3_3/manifest.json
+  attribution_agreement: reports/R3_3/attribution_agreement.csv
+  channel_interactions: reports/R3_3/channel_interactions.csv
+  cascade_summary: reports/R3_3/cascade_summary.csv
+  minimal_set_audit: reports/R3_3/minimal_set_search_audit.csv
+  solver_failure_ledger: reports/R3_3/solver_failure_ledger.csv
+  report: reports/R3_3/report.json
+
+gate:
+  require_all_coalitions_present: true
+  require_shapley_reconstruction: true
+  require_unique_competitor_candidate_keys: true
+  require_solver_failures_ledgered: true
+  require_exact_vs_bounded_status: true
+  require_at_least_two_edge_definition_sensitivities: true
+  require_forbidden_reads_zero: true
+  require_full_tests_pass: true

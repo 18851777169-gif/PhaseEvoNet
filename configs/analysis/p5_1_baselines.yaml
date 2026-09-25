@@ -1,0 +1,155 @@
+task_id: P5.1
+seed: 42
+method_version: P5_1_BASELINES_V1
+
+input:
+  development_labels: data/processed/P4_2/development_labels.parquet
+  p4_2_manifest: data/manifests/P4_2/split_manifest.json
+  p4_2_signature: data/manifests/P4_2/split_manifest.sig
+  p4_2_public_key: data/manifests/P4_2/manifest_ed25519_public.pem
+  p4_2_report: reports/P4_2/report.json
+  locked_thresholds: data/manifests/P4_2/locked_thresholds.json
+  phase_entries: data/interim/P3_2/phase_entry_unified.parquet
+  p3_2_manifest: data/manifests/P3_2/phase_diagram_manifest.json
+  p3_2_report: reports/P3_2/report.json
+
+output:
+  root: data/processed/P5_1
+  features: data/processed/P5_1/baseline_features.parquet
+  predictions: data/processed/P5_1/baseline_predictions.parquet
+  metrics: reports/P5_1/metrics.csv
+  bootstrap_comparison: reports/P5_1/bootstrap_comparison.csv
+  selected_baseline: reports/P5_1/selected_baseline.json
+  data_dictionary: reports/P5_1/data_dictionary.csv
+  models_root: models/P5_1
+  manifest: data/manifests/P5_1/baseline_manifest.json
+
+population:
+  target: rebuilt_unified_flip
+  train_role: train
+  validation_role: validation
+  train_source_snapshot: "2022-10-28"
+  train_target_snapshot: "2023-11-01"
+  validation_source_snapshot: "2023-11-01"
+  validation_target_snapshot: "2024-12-18"
+  forbidden_roles: [locked_test]
+  source_only_phase_join_key:
+    [source_snapshot, thermo_type, source_thermo_id, source_material_id]
+  phase_target_key: [snapshot_id, thermo_type, thermo_id, material_id]
+  ambiguous_or_missing_source_policy: fail
+
+features:
+  stable_energy_tolerance_eV_per_atom: 1.0e-8
+  near_hull_thresholds_eV_per_atom: [0.01, 0.025, 0.05]
+  hull_only:
+    - source_energy_above_hull
+    - source_log1p_hull_distance_10meV
+    - source_is_stable
+  composition_complexity:
+    - source_energy_above_hull
+    - source_log1p_hull_distance_10meV
+    - source_is_stable
+    - source_formation_energy_per_atom
+    - source_nelements
+    - source_log1p_num_atoms
+    - source_composition_entropy
+    - source_max_element_fraction
+    - source_mean_atomic_number
+    - source_std_atomic_number
+    - source_abs_correction_per_atom
+    - source_decomposition_component_count
+    - source_record_count
+    - thermo_GGA_GGA+U
+    - thermo_GGA_GGA+U_R2SCAN
+    - thermo_R2SCAN
+  phase_context:
+    - source_energy_above_hull
+    - source_log1p_hull_distance_10meV
+    - source_is_stable
+    - source_formation_energy_per_atom
+    - source_nelements
+    - source_log1p_num_atoms
+    - source_composition_entropy
+    - source_max_element_fraction
+    - source_mean_atomic_number
+    - source_std_atomic_number
+    - source_abs_correction_per_atom
+    - source_decomposition_component_count
+    - source_record_count
+    - context_entry_count
+    - context_target_count
+    - context_competitor_count
+    - context_stable_count
+    - context_near_hull_10meV_count
+    - context_near_hull_25meV_count
+    - context_near_hull_50meV_count
+    - context_mean_energy_above_hull
+    - context_std_energy_above_hull
+    - context_min_positive_energy_above_hull
+    - context_competitor_fraction
+    - thermo_GGA_GGA+U
+    - thermo_GGA_GGA+U_R2SCAN
+    - thermo_R2SCAN
+  forbidden_feature_patterns:
+    - target_
+    - delta_
+    - future_
+    - label
+    - attribution
+
+models:
+  train_prevalence:
+    type: constant_train_prevalence
+  current_hull_distance_hgb:
+    type: hist_gradient_boosting
+    feature_set: hull_only
+  composition_complexity_logistic:
+    type: logistic_regression
+    feature_set: composition_complexity
+  static_phase_context_hgb:
+    type: hist_gradient_boosting
+    feature_set: phase_context
+  logistic_regression:
+    C: 1.0
+    max_iter: 2000
+    solver: lbfgs
+    class_weight: balanced
+  hist_gradient_boosting:
+    learning_rate: 0.05
+    max_iter: 250
+    max_leaf_nodes: 15
+    min_samples_leaf: 50
+    l2_regularization: 1.0
+    max_bins: 255
+    early_stopping: false
+    class_weight: balanced
+  balanced_probability_policy: correct_odds_to_empirical_training_prevalence
+
+evaluation:
+  primary_metric: average_precision
+  secondary_metrics: [brier, ece_10, top_decile_enrichment]
+  bootstrap_unit: canonical_lineage_id
+  bootstrap_replicates: 1000
+  confidence_level: 0.95
+  strongest_baseline_order:
+    - highest_validation_average_precision
+    - lowest_validation_brier
+    - lowest_validation_ece_10
+    - lexical_model_name
+
+gate:
+  relation_model: static_phase_context_hgb
+  hull_reference_model: current_hull_distance_hgb
+  require_validation_average_precision_strictly_greater: true
+  require_validation_brier_not_greater: true
+  numerical_tolerance: 1.0e-12
+  bootstrap_interval_is_descriptive_not_gate: true
+  require_strongest_baseline_selected: true
+  require_no_locked_test_access: true
+  require_zero_lineage_overlap: true
+  require_complete_source_feature_join: true
+  require_deterministic_rebuild: true
+
+parquet:
+  compression: zstd
+  row_group_size: 50000

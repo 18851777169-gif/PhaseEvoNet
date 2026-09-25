@@ -1,0 +1,110 @@
+task_id: V2.1
+seed: 42
+method_version: PHASEEVONET_V2_1_DEVELOPMENT_TABLES_V1
+
+input:
+  v2_0_report: reports/V2_0/report.json
+  v2_0_report_sidecar: reports/V2_0/report.sha256
+  development_labels: data/processed/P4_2/development_labels.parquet
+  baseline_source_features: data/processed/P5_1/baseline_features.parquet
+  phase_entries: data/interim/P3_2/phase_entry_unified.parquet
+  transition_attribution: data/interim/P3_3/transition_attribution.parquet
+  phase_decomposition: data/interim/P3_2/phase_decomposition.parquet
+  model_matrix: configs/analysis/v2_1_model_matrix.yaml
+  expected_sha256:
+    v2_0_report: f59d906b9fb348c1c2defad562e1acffeadefc8ec196c5b8526dbe4baf06f682
+    development_labels: 10ee1e0f9724f3e71520cb11896fbad55022f84dfb800be3767bf86799c5d28b
+    baseline_source_features: 74128c104d698efbc7153cb39e7da9c4b2ed50f896da66268818cffc7361382a
+    phase_entries: 9236b0fdaeafe14b453afba818d26e4ca6d435812486b0924cb85b5fb26e1f7b
+    transition_attribution: 2f4eaa954ba607633824ce0184c216679fe32679b1928ab768f2cd0b3b839603
+    phase_decomposition: 95b0f6abcdc0289957021d48d12f433ba3764a9d9d9fb99009364e1fd1301386
+
+allowed_development_intervals:
+  - role: train
+    source_snapshot: "2022-10-28"
+    target_snapshot: "2023-11-01"
+    exposure_days: 369
+  - role: validation
+    source_snapshot: "2023-11-01"
+    target_snapshot: "2024-12-18"
+    exposure_days: 413
+
+forbidden:
+  roles: [locked_test]
+  source_snapshots: ["2024-12-18", "2025-09-25", "2026-04-13"]
+  target_snapshots: ["2025-09-25", "2026-04-13"]
+  feature_name_patterns: [target_, delta_, future_, label, attribution, outcome]
+  locked_outcome_access: true
+  model_training: true
+
+features:
+  stable_tolerance_eV_per_atom: 1.0e-8
+  attribution_activity_tolerance_eV_per_atom: 1.0e-12
+  history_previous_snapshot:
+    "2022-10-28": null
+    "2023-11-01": "2022-10-28"
+  history_exposure_days:
+    "2022-10-28": 0
+    "2023-11-01": 369
+  baseline_safe_columns:
+    - source_energy_above_hull
+    - source_log1p_hull_distance_10meV
+    - source_is_stable
+    - source_formation_energy_per_atom
+    - source_nelements
+    - source_log1p_num_atoms
+    - source_composition_entropy
+    - source_max_element_fraction
+    - source_mean_atomic_number
+    - source_std_atomic_number
+    - source_abs_correction_per_atom
+    - source_decomposition_component_count
+    - source_record_count
+    - thermo_GGA_GGA+U
+    - thermo_GGA_GGA+U_R2SCAN
+    - thermo_R2SCAN
+    - context_entry_count
+    - context_target_count
+    - context_competitor_count
+    - context_stable_count
+    - context_near_hull_10meV_count
+    - context_near_hull_25meV_count
+    - context_near_hull_50meV_count
+    - context_mean_energy_above_hull
+    - context_std_energy_above_hull
+    - context_min_positive_energy_above_hull
+    - context_competitor_fraction
+
+output:
+  source_features: data/processed/V2_1/source_features.parquet
+  cause_specific_targets: data/processed/V2_1/cause_specific_targets.parquet
+  interval_exposure: data/processed/V2_1/interval_exposure.parquet
+  manifest: data/manifests/V2_1/development_manifest.json
+  feature_schema: data/manifests/V2_1/feature_schema.json
+  source_only_audit: reports/V2_1/source_only_feature_audit.csv
+  target_dictionary: reports/V2_1/target_dictionary.csv
+  row_count_audit: reports/V2_1/row_count_audit.csv
+  exclusion_ambiguity_ledger: reports/V2_1/exclusion_ambiguity_ledger.csv
+  determinism_check: reports/V2_1/determinism_check.json
+  report: reports/V2_1/report.json
+  report_sidecar: reports/V2_1/report.sha256
+
+parquet:
+  compression: zstd
+  row_group_size: 50000
+
+gate:
+  required_rows: 286357
+  required_stable_to_unstable_events: 344
+  required_stable_to_unstable_by_interval:
+    "2022-10-28->2023-11-01": 175
+    "2023-11-01->2024-12-18": 169
+  required_unstable_to_stable_events: 193
+  require_zero_row_loss: true
+  require_zero_duplicate_transition_ids: true
+  require_zero_train_validation_lineage_overlap: true
+  require_zero_forbidden_feature_names: true
+  require_zero_locked_outcome_reads: true
+  require_zero_model_training: true
+  require_complete_source_and_target_context_inventory: true
+  require_format_roundtrip_failures_zero: true

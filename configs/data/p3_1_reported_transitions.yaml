@@ -1,0 +1,54 @@
+task_id: P3.1
+seed: 42
+
+snapshots:
+  - "2022-10-28"
+  - "2023-11-01"
+  - "2024-12-18"
+  - "2025-09-25"
+
+input:
+  normalized_root: data/interim/P1_2
+  identity_edges: data/interim/P2_2/identity_edge.parquet
+  p2_2_manifest: data/manifests/P2_2/identity_manifest.json
+  p2_2_report: reports/P2_2/report.json
+  raw_snapshot_manifest: data/manifests/P1_1/snapshot_manifest.jsonl
+
+output:
+  root: data/interim/P3_1
+  reported_states: data/interim/P3_1/reported_state.parquet
+  transition_labels: data/interim/P3_1/transition_label.parquet
+  duplicate_ledger: data/manifests/P3_1/thermo_duplicate_ledger.parquet
+  ambiguity_ledger: data/manifests/P3_1/exclusion_ambiguity_ledger.jsonl
+  manifest: data/manifests/P3_1/transition_manifest.json
+  source_audit_csv: reports/P3_1/source_value_audit.csv
+  source_audit_json: reports/P3_1/source_value_audit.json
+  data_dictionary: reports/P3_1/data_dictionary.csv
+
+reported_state_key:
+  - material_id
+  - thermo_type
+
+reported_fields:
+  - thermo_id
+  - is_stable
+  - energy_above_hull
+  - formation_energy_per_atom
+
+transition_policy:
+  require_same_thermo_type: true
+  accepted_identity_confidences: [A1, A2]
+  include_censored_states: true
+  include_no_thermo_sentinel: true
+  label_source: is_stable
+  recompute_hull: false
+
+audit:
+  sample_per_snapshot_pair_thermo_type: 100
+  include_all_a2_observed: true
+  required_match_rate: 1.0
+  float_absolute_tolerance: 1.0e-12
+
+parquet:
+  compression: zstd
+  row_group_size: 50000

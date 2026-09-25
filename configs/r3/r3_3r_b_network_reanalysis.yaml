@@ -1,0 +1,61 @@
+task_id: R3.3R-B
+seed: 42
+method_version: PHASEEVONET_R3_3R_NETWORK_REANALYSIS_V1
+
+input:
+  frozen_mapping_manifest: data/manifests/R3_3R/identity_mapping_manifest.json
+  crosswalk: data/processed/R3_3R/competitor_identity_crosswalk.parquet
+  competitor_candidate_edge: data/processed/R3_3/competitor_candidate_edge.parquet
+
+identity_definitions:
+  - id0_contextual
+  - id1_strict_entry
+  - id2_lineage_thermo_workflow
+  - id3_lineage_only
+
+edge_definitions:
+  structural_secondary: [selected_active]
+  impact_primary: [necessary_10meV, necessary_25meV, contributory_5meV, minimal_set_member]
+
+metrics:
+  - edge_pairs
+  - competitor_nodes
+  - candidate_nodes
+  - connected_components
+  - largest_cascade
+  - largest_cascade_fraction
+  - mean_cascade
+  - median_cascade
+  - gini
+  - hhi
+  - top_1pct_share
+  - top_5pct_share
+  - top_10pct_share
+  - maximum_candidate_indegree
+  - mean_candidate_indegree
+
+stability:
+  leave_one_target_snapshot_out: true
+  leave_one_thermo_type_out: true
+  candidate_subsampling_without_replacement:
+    fraction: 0.80
+    replicates: 2000
+    quantiles: [0.025, 0.50, 0.975]
+    label: stability_envelope_not_confidence_interval
+
+gate:
+  compare_identity_a: id1_strict_entry
+  compare_identity_b: id2_lineage_thermo_workflow
+  maximum_absolute_gini_difference: 0.10
+  maximum_absolute_top10_share_difference: 0.10
+  maximum_absolute_largest_cascade_fraction_difference: 0.02
+  minimum_stable_impact_edge_definitions: 2
+  require_leave_one_stratum_directional_stability: true
+  require_all_synthetic_tests_pass: true
+
+output:
+  identity_resolved_edges: data/processed/R3_3R/identity_resolved_edge.parquet
+  network_summary: reports/R3_3R_B/network_summary.csv
+  identity_sensitivity: reports/R3_3R_B/identity_sensitivity.csv
+  stability_envelope: reports/R3_3R_B/stability_envelope.csv
+  report: reports/R3_3R_B/report.json

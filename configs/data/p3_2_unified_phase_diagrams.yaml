@@ -1,0 +1,62 @@
+task_id: P3.2
+seed: 42
+
+snapshots:
+  - "2022-10-28"
+  - "2023-11-01"
+  - "2024-12-18"
+  - "2025-09-25"
+
+input:
+  normalized_root: data/interim/P1_2
+  p1_2_manifest: data/manifests/P1_2/normalization_manifest.json
+  p3_1_report: reports/P3_1/report.json
+
+output:
+  root: data/interim/P3_2
+  phase_entries: data/interim/P3_2/phase_entry_unified.parquet
+  decompositions: data/interim/P3_2/phase_decomposition.parquet
+  duplicate_ledger: data/manifests/P3_2/entry_duplicate_ledger.parquet
+  ambiguity_ledger: data/manifests/P3_2/exclusion_ambiguity_ledger.jsonl
+  manifest: data/manifests/P3_2/phase_diagram_manifest.json
+  reference_audit_csv: reports/P3_2/reference_audit.csv
+  reference_audit_json: reports/P3_2/reference_audit.json
+  data_dictionary: reports/P3_2/data_dictionary.csv
+  compatibility_exclusion_ledger: reports/P3_2/compatibility_exclusion_ledger.csv
+
+energy_policy:
+  corrected_energy: energy_plus_correction
+  partition_key: [snapshot_id, thermo_type]
+  entry_key: [snapshot_id, thermo_type, entry_id]
+  cross_workflow_mixing: false
+  duplicate_float_absolute_tolerance: 1.0e-12
+  stable_energy_tolerance_eV_per_atom: 1.0e-8
+  context_dependent_workflows:
+    - GGA_GGA+U_R2SCAN
+  context_contract_status: AMENDED_2026-08-24
+  phase_context_key: [snapshot_id, thermo_type, phase_context_chemsys, entry_id]
+  mixed_base_workflows: [GGA_GGA+U, R2SCAN]
+  mixed_run_type_1: GGA(+U)
+  mixed_run_type_2: R2SCAN
+  check_potcar: false
+
+reference_test:
+  source_entry_selector: energy_type_equals_entry_label
+  absolute_tolerance_eV_per_atom: 1.0e-6
+  required_match_rate: 1.0
+  sample_per_snapshot_thermo_type: 100
+  eligibility_rule_version: COMPATIBILITY_EVALUABLE_2026-08-24
+  allowed_exclusion_reasons:
+    - no_unique_processed_representative
+    - homogeneous_source_unavailable
+  maximum_exclusion_fraction: 0.0005
+
+execution:
+  workers: 5
+  resume_group_parts: true
+  warning_policy: record_fallback_categories
+  structure_cache_entries: 20000
+
+parquet:
+  compression: zstd
+  row_group_size: 50000

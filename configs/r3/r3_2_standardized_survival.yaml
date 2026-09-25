@@ -1,0 +1,93 @@
+task_id: R3.2
+seed: 42
+method_version: PHASEEVONET_R3_2_STANDARDIZED_SURVIVAL_V1
+
+input:
+  r3_1_report: reports/R3_1/report.json
+  robust_transition: data/processed/R3_1/robust_transition.parquet
+  signed_stability_state: data/processed/R3_1/signed_stability_state.parquet
+  transition_labels: data/interim/P3_1/transition_label.parquet
+  phase_entries: data/interim/P3_2/phase_entry_unified.parquet
+
+outcomes:
+  primary: stable_to_unstable_exact
+  finite_primary_threshold_eV_per_atom: 0.010
+  finite_stringent_threshold_eV_per_atom: 0.025
+  multistate_bins_eV_per_atom:
+    exact_stable_max: 1.0e-8
+    near_10_max: 0.010
+    near_25_max: 0.025
+    near_50_max: 0.050
+  preserve_deprecated_and_missing_states: true
+
+risk_set:
+  primary_identity_confidences: [A1]
+  sensitivity_identity_confidences: [A1, A2]
+  require_source_observed: true
+  require_same_thermo_type: true
+  exposure_days:
+    "2022-10-28->2023-11-01": 369
+    "2023-11-01->2024-12-18": 413
+    "2024-12-18->2025-09-25": 281
+
+model:
+  family: binomial
+  link: cloglog
+  offset: log_exposure_years
+  cluster: canonical_lineage_id
+  formula_terms:
+    - C(release_pair)
+    - C(thermo_type)
+    - C(source_chemsys_dimensionality)
+    - bs(source_stability_margin_eV_per_atom, df=4)
+    - log1p(source_context_entry_count)
+    - source_context_competitor_fraction
+    - source_nelements
+    - source_composition_entropy
+    - C(source_provenance_class_if_available)
+  interactions:
+    - C(thermo_type):C(source_margin_bin)
+  no_outcome_adaptive_term_selection: true
+
+standardization:
+  primary_reference: pooled_source_person_period
+  sensitivity_references:
+    - first_release_source_population
+    - latest_release_source_population
+    - common_support_population
+  bootstrap_unit: canonical_lineage_id
+  bootstrap_replicates: 2000
+  ci_level: 0.95
+
+nonparametric_sensitivity:
+  cell_dimensions:
+    - thermo_type
+    - source_chemsys_dimensionality
+    - source_margin_bin
+    - source_context_density_bin
+  report_raw_denominators: true
+  shrinkage_for_visualization_only: true
+
+output:
+  risk_set: data/processed/R3_2/risk_set.parquet
+  multistate_transition: data/processed/R3_2/multistate_transition.parquet
+  standardized_risk: data/processed/R3_2/standardized_transition_risk.parquet
+  manifest: data/manifests/R3_2/manifest.json
+  covariate_balance: reports/R3_2/covariate_balance.csv
+  coefficients: reports/R3_2/model_coefficients.csv
+  standardized_summary: reports/R3_2/standardized_risk.csv
+  multistate_matrix: reports/R3_2/multistate_matrix.csv
+  overlap_diagnostics: reports/R3_2/overlap_diagnostics.csv
+  bootstrap_summary: reports/R3_2/bootstrap_summary.csv
+  exclusion_ledger: reports/R3_2/exclusion_ambiguity_ledger.csv
+  report: reports/R3_2/report.json
+
+gate:
+  require_unique_risk_rows: true
+  require_raw_count_reconciliation: true
+  require_model_convergence_or_declared_fallback: true
+  require_common_support_for_reported_contrasts: true
+  require_lineage_uncertainty: true
+  require_raw_and_adjusted_disclosure: true
+  require_forbidden_reads_zero: true
+  require_full_tests_pass: true

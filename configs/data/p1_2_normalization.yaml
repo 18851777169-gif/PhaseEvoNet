@@ -1,0 +1,49 @@
+task_id: P1.2
+seed: 42
+source_manifest: data/manifests/P1_1/snapshot_manifest.jsonl
+output_root: data/interim/P1_2
+manifest_dir: data/manifests/P1_2
+report_dir: reports/P1_2
+compression: zstd
+row_group_size: 5000
+critical_completeness_threshold: 0.95
+critical_fields:
+  raw_material:
+    - snapshot_id
+    - material_id
+    - composition_reduced_json
+    - structure_json
+    - task_ids_json
+  raw_task:
+    - snapshot_id
+    - material_id
+    - task_id
+    - calc_type
+    - task_type
+    - run_type
+  raw_thermo:
+    - snapshot_id
+    - material_id
+    - thermo_id
+    - thermo_type
+    - composition_reduced_json
+    - formation_energy_per_atom
+    - energy_above_hull
+    - is_stable
+  raw_thermo_entry:
+    - snapshot_id
+    - material_id
+    - thermo_id
+    - entry_label
+    - energy
+    - structure_json
+  raw_provenance:
+    - snapshot_id
+    - material_id
+source_selection:
+  include_collections: [materials, thermo, provenance]
+  include_format: jsonl.gz
+  exclude_object_basename_contains: manifest
+  reason: >-
+    Collection manifest/index objects duplicate partition records and are not source
+    documents. Only non-manifest gzip JSONL partition objects are normalized.
