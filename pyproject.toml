@@ -7,11 +7,10 @@ name = "phase-evonet"
 version = "0.1.0"
 description = "Research code for version-aware phase-stability benchmarking"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
   "cryptography>=42.0",
-  "emmet-core>=0.83.8,<0.87; python_version < '3.11'",
-  "emmet-core>=0.87.1; python_version >= '3.11'",
+  "emmet-core>=0.87.1",
   "numpy>=1.24",
   "pandas>=2.0",
   "matplotlib>=3.8",

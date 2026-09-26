@@ -6,13 +6,28 @@ The central design keeps candidate identities, feature inputs, and prediction sc
 
 ## Installation
 
-PhaseEvoNet requires Python 3.10 or later.
+PhaseEvoNet requires Python 3.11 or later. The release is tested with Python 3.11.
+
+On Linux or macOS:
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
+source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 ```
+
+On Windows (PowerShell), use the environment's interpreter directly:
+
+```powershell
+py -3.11 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+```
+
+In the commands below, use `python` from the activated environment, or replace it
+with `.\.venv\Scripts\python.exe` on Windows. For the recorded dependency
+resolution, `uv sync --locked --extra dev --python 3.11` installs from `uv.lock`.
 
 ## Verification
 
@@ -40,12 +55,34 @@ The smoke workflow generates synthetic versioned materials and does not access M
 
 Use `phase-evo --help` to inspect the supported command-line workflows. Detailed R3 analyses can also be invoked through the modules in `phase_evonet.r3`.
 
+The self-contained public workflows are the synthetic smoke tests and aggregate
+figure reproduction. Record-level study workflows additionally require the
+authorised archival data, manifests, and prerequisite reports; this repository
+alone is not a complete record-level replay bundle. The sealed temporal-split
+commands require an explicit `--config` pointing to an authorised local
+configuration. That configuration, encryption keys, and sealed data are not
+distributed. Merely running `--help` or the figure workflow does not access them.
+
 Regenerate the six manuscript figures from the released aggregate tables with:
 
 ```bash
+python -m phase_evonet.figure_sources --root .
 python scripts/render_as_figure_revision.py
 python scripts/qa_as_figure_revision.py
 ```
+
+Source integrity is checked against `source_data/source_data_manifest.csv`,
+including SHA-256, byte size, and row count. Frozen CSV bytes, configurations,
+and the original study license notice are preserved rather than renormalised.
+Figure 5b and Figure 6b include the manuscript's approved legend/text repairs;
+the numerical source tables are unchanged.
+
+The QA command returns a nonzero exit code on automated failure. An automated
+pass is reported as `AUTOMATED_PASS_VISUAL_REVIEW_PENDING`, **not** as a completed
+manual review. Inspect the exported figures and contact sheets separately.
+Contact-sheet fonts use Matplotlib's bundled DejaVu Sans Bold, so no system
+Arial installation is required. Full figures use Arial when available, with
+Liberation Sans and DejaVu Sans as fallbacks.
 
 ## Data availability and licensing boundary
 

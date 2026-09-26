@@ -12,6 +12,8 @@ import numpy as np
 import pandas as pd
 from matplotlib.colors import LinearSegmentedColormap, Normalize
 
+from phase_evonet.figure_sources import load_manifest, verify_sources, verify_table
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOT = ROOT / "source_data" / "figures"
@@ -100,6 +102,7 @@ def source_csv(number: int) -> Path:
 
 
 def read(number: int) -> pd.DataFrame:
+    verify_table(source_csv(number), load_manifest(ROOT)[number])
     return pd.read_csv(source_csv(number))
 
 
@@ -107,6 +110,7 @@ def export(fig: plt.Figure, number: int) -> dict[str, str]:
     out = FIG_ROOT / f"Figure_{number}"
     out.mkdir(parents=True, exist_ok=True)
     src = source_csv(number)
+    verify_table(src, load_manifest(ROOT)[number])
     copied = out / f"figure_{number}_source_data.csv"
     shutil.copy2(src, copied)
     paths = {
@@ -463,6 +467,13 @@ def figure_5() -> plt.Figure:
             cell.set_facecolor("#F9FCFD" if row % 2 else "#EEF7F8")
     table.scale(1.0, 1.35)
     panel_label(cx, "c", -0.01, 0.98)
+    # Preserve the manuscript's axes geometry while moving its legend above data.
+    fig.canvas.draw()
+    fig.set_layout_engine(None)
+    legend = bx.get_legend()
+    legend.set_loc("lower left")
+    legend.set_bbox_to_anchor((0.015, 1.02))
+    legend.set_in_layout(True)
     return fig
 
 
@@ -496,10 +507,12 @@ def figure_6() -> plt.Figure:
     yy = np.arange(3)[::-1]
     left = -e.stable_to_unstable.to_numpy()
     right = e.unstable_to_stable.to_numpy()
+    left_count_labels = []
     bx.barh(yy, left, color=RED, height=0.55, label="Stable → unstable")
     bx.barh(yy, right, color=BLUE, height=0.55, label="Unstable → stable")
     for yv, l, r in zip(yy, e.stable_to_unstable.astype(int), e.unstable_to_stable.astype(int)):
-        bx.text(-l - 8, yv, f"{l}", ha="right", va="center", fontsize=7.5, fontweight="bold")
+        label = bx.text(-l - 8, yv, f"{l}", ha="right", va="center", fontsize=7.5, fontweight="bold")
+        left_count_labels.append((label, l))
         bx.text(r + 8, yv, f"{r}", ha="left", va="center", fontsize=7.5, fontweight="bold")
     bx.axvline(0, color=BLACK, lw=0.8)
     bx.set_yticks(yy, [LABELS[k] for k in LABELS])
@@ -560,10 +573,17 @@ def figure_6() -> plt.Figure:
     for spine in dx.spines.values():
         spine.set_visible(False)
     panel_label(dx, "d", -0.12)
+    # Apply the approved text-only correction after freezing the original layout.
+    fig.canvas.draw()
+    fig.set_layout_engine(None)
+    for label, count in left_count_labels:
+        label.set_position((-count + 12, label.get_position()[1]))
+        label.set_ha("left")
     return fig
 
 
 def main() -> None:
+    verify_sources(ROOT)
     configure_style()
     OUT_ROOT.mkdir(parents=True, exist_ok=True)
     manifest: dict[str, object] = {

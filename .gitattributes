@@ -7,3 +7,11 @@
 *.md text eol=lf
 *.cff text eol=lf
 Makefile text eol=lf
+.gitattributes text eol=lf
+uv.lock text eol=lf
+
+# Preserve the registered bytes of frozen inputs on every platform.
+source_data/figures/*.csv -text whitespace=cr-at-eol
+LICENSE -text
+configs/analysis/v2_1_model_matrix.yaml -text whitespace=-blank-at-eof
+configs/analysis/v2_1_development_tables.yaml -text whitespace=-blank-at-eof

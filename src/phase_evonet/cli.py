@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from pathlib import Path
 
 from .pipeline import run_smoke
 from .normalization import (
@@ -50,6 +51,13 @@ from .r3.competitor_cascade import (
     verify_attribution_cascade,
 )
 from .snapshots import run_snapshot_download, verify_snapshot_manifest
+
+
+def existing_config(value: str) -> str:
+    """Require an explicitly supplied local configuration for sealed workflows."""
+    if not Path(value).is_file():
+        raise argparse.ArgumentTypeError(f"configuration file does not exist: {value}")
+    return value
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -203,14 +211,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="Freeze P4.2 lineage-disjoint temporal labels and sealed test payload",
     )
     temporal_split.add_argument(
-        "--config", default="configs/analysis/p4_2_temporal_split.yaml"
+        "--config", required=True, type=existing_config,
+        help="Authorised local P4.2 configuration; sealed-data configuration is not distributed",
     )
     temporal_split_verify = sub.add_parser(
         "temporal-split-verify",
         help="Offline verification of the P4.2 signed split and cryptographic seal",
     )
     temporal_split_verify.add_argument(
-        "--config", default="configs/analysis/p4_2_temporal_split.yaml"
+        "--config", required=True, type=existing_config,
+        help="Authorised local P4.2 configuration; sealed-data configuration is not distributed",
     )
     baselines = sub.add_parser(
         "baselines",
